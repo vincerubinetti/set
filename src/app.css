@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css?family=Lexend+Deca');
+
+* {
+  font-family: 'Lexend Deca', sans-serif;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+button {
+  font-size: 1em;
+}
+
+@media screen and (max-width: 640px), screen and (max-height: 640px) {
+  * {
+    font-size: 10pt;
+  }
+}

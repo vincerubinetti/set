@@ -1,0 +1,30 @@
+{
+  "extends": ["google"],
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module",
+    "ecmaFeatures": { "modules": true, "jsx": true }
+  },
+  "env": { "es6": true, "browser": true },
+  "plugins": ["html", "react"],
+  "rules": {
+    "curly": ["error", "multi-or-nest"],
+    "eqeqeq": ["error", "always"],
+    "comma-dangle": ["error", "never"],
+    "indent": ["error", 2, { "SwitchCase": 1 }],
+    "keyword-spacing": ["error"],
+    "one-var": ["off"],
+    "space-in-parens": ["error"],
+    "space-infix-ops": ["error"],
+    "no-var": ["off"],
+    "require-jsdoc": ["off"],
+    "nonblock-statement-body-position": ["error", "below"],
+    "no-multiple-empty-lines": ["error", { "max": 1 }],
+    "quotes": ["error", "single", { "avoidEscape": true }],
+    "object-curly-spacing": ["error", "always"],
+    "no-invalid-this": ["off"],
+    "react/jsx-uses-vars": ["error"],
+    "react/jsx-uses-react": ["error"]
+  }
+}

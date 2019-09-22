@@ -1,0 +1,34 @@
+.bottom_panel {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  height: 50px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-top: solid 2px #f0f0f0;
+}
+.card_thumbnail {
+  display: flex;
+  position: relative;
+}
+.card_thumbnail:nth-child(3n + 1) {
+  left: 16px;
+  margin-left: -10px;
+}
+.card_thumbnail:nth-child(3n) {
+  left: -16px;
+  margin-right: -10px;
+}
+.card_thumbnail .card {
+  width: 24px;
+  height: 40px;
+  border-radius: 2.5px;
+  margin: 0;
+  border-width: 1px;
+}
+.card_thumbnail .glyph {
+  width: 16px;
+  height: 8px;
+  margin: 2.5px 0;
+}

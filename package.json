@@ -1,0 +1,39 @@
+{
+  "name": "set",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "./",
+  "dependencies": {
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
+    "react-pose": "^4.0.8",
+    "react-scripts": "^3.1.2"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "node ./scripts/build-non-split.js",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-html": "^6.0.0",
+    "eslint-plugin-react": "^7.14.3",
+    "rewire": "^4.0.1"
+  }
+}

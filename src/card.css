@@ -1,0 +1,58 @@
+.card_button {
+  display: flex;
+  background: none;
+  border: none;
+  outline: none;
+  border-radius: 10px;
+  margin: 10px;
+  padding: 0;
+  overflow: visible;
+}
+.card_button:hover .card {
+  transform: scale(1.05);
+  cursor: pointer;
+}
+.card_button:hover .card,
+.card_button:focus .card {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+.card_button[data-selected='true'] .card {
+  border-color: #000000;
+}
+.card_button[data-hinted='true'] {
+  animation: hint_glow 1s ease alternate infinite;
+}
+@keyframes hint_glow {
+  from {
+    box-shadow: none;
+  }
+  to {
+    box-shadow: 0 0 10px #9c27b0;
+  }
+}
+.card {
+  width: 120px;
+  height: 200px;
+  border-radius: 10px;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff;
+  border: solid 3px #e0e0e0;
+  stroke-width: 4px;
+  vertical-align: top;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+@media screen and (max-width: 640px), screen and (max-height: 640px) {
+  .card_button {
+    margin: 5px;
+    border-radius: 5px;
+  }
+  .card {
+    width: 60px;
+    height: 100px;
+    border-radius: 5px;
+    border-width: 2px;
+  }
+}
