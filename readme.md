@@ -4,7 +4,7 @@
 
 ---
 
-[**PLAY GAME**](https://vincerubinetti.github.io/set/)
+[**⭐ Play the Game ⭐**](https://vincerubinetti.github.io/set/)
 
 ---
 
