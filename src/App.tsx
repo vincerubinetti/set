@@ -218,17 +218,7 @@ export default function App() {
             : "SET"}
         </h1>
 
-        <div className="flex flex-wrap items-center gap-4">
-          <Detail label="Sets" value={sets.length} className="max-sm:sr-only" />
-
-          <Detail
-            label="Cards"
-            value={81 - sets.length * 3}
-            className="max-sm:sr-only"
-          />
-
-          <Time start={start} end={end} />
-        </div>
+        <Time start={start} end={end} />
 
         <div className="flex flex-wrap items-center gap-1 p-2">
           <Button onClick={newGame} aria-label="New game">
