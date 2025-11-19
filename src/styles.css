@@ -3,11 +3,11 @@
 @theme {
   --font-sans: "Outfit", sans-serif;
 
-  --animate-hint: hint 1s ease-in-out infinite;
+  --animate-win: win 1s infinite ease-out both;
 
-  @keyframes hint {
-    50% {
-      box-shadow: 0 0 --spacing(4) theme(colors.indigo.300);
+  @keyframes win {
+    25% {
+      translate: 0 -5px;
     }
   }
 }
@@ -20,22 +20,20 @@ html {
   @apply font-thin;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 600px) {
   html {
-    --spacing: 3.5px;
-    font-size: 90%;
+    --spacing: 3.25px;
   }
 }
 
 @media (max-width: 400px) {
   html {
-    --spacing: 3px;
-    font-size: 80%;
+    --spacing: 2.5px;
   }
 }
 
 #root {
-  @apply flex h-screen flex-col;
+  @apply flex h-dvh flex-col;
 }
 
 hr {

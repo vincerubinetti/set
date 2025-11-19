@@ -18,7 +18,7 @@ export default function Dialog({ trigger, content, onOpen, onClose }: Props) {
           initialFocus={false}
           className="pointer-events-none fixed inset-0 z-20 grid place-items-center p-10"
         >
-          <div className="pointer-events-auto flex max-h-full min-h-0 max-w-full min-w-0 flex-col gap-4 overflow-auto rounded bg-white p-8">
+          <div className="pointer-events-auto max-h-full min-h-0 max-w-full overflow-auto rounded bg-white">
             {content}
           </div>
         </_Dialog.Popup>

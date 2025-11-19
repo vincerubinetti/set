@@ -8,7 +8,7 @@ import { sleep } from "@/util/misc";
 const toastsAtom = atom<{ id: string; content: ReactNode }[]>([]);
 
 export const toast = async (content: ReactNode) => {
-  const id = uniqueId("toast-");
+  const id = uniqueId();
   getDefaultStore().set(toastsAtom, (prev) => [...prev, { id, content }]);
   await sleep(2000);
   getDefaultStore().set(toastsAtom, (prev) =>
@@ -25,8 +25,8 @@ export default function Toasts() {
         {[...toasts].reverse().map(({ id, content }) => (
           <motion.div
             key={id}
-            {...motionProps}
-            className="flex items-center gap-2 p-2"
+            {...motionProps()}
+            className="flex items-center justify-end gap-2 p-2"
           >
             {content}
           </motion.div>

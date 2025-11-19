@@ -1,18 +1,19 @@
 import type { ComponentProps, ReactNode } from "react";
+import { clsx } from "clsx";
 
 type Props = {
   label: ReactNode;
   value: ReactNode;
 } & ComponentProps<"div">;
 
-export default function Detail({ label, value, ...props }: Props) {
+export default function Detail({ label, value, className, ...props }: Props) {
   return (
     <div
-      className="flex flex-col items-center justify-center gap-1 p-1 leading-none tabular-nums"
+      className={clsx("flex items-center justify-center gap-2", className)}
       {...props}
     >
-      <span className="flex items-center gap-1 text-slate-400">{label}</span>
-      <span>{value}</span>
+      <span className="text-slate-400">{label}</span>
+      <span>{typeof value === "number" ? value.toLocaleString() : value}</span>
     </div>
   );
 }

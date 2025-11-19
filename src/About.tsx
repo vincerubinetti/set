@@ -1,12 +1,50 @@
 import { Fragment } from "react/jsx-runtime";
 import { uniqueId } from "lodash";
-import { ChevronRight, Info, Lightbulb, Play } from "lucide-react";
-import { colors, fills, numbers, shapes } from "@/card";
+import { ChartColumn, ChevronRight, Info, Lightbulb, Play } from "lucide-react";
+import { colors, fills, numbers, shapes, type Triple } from "@/card";
 import Card from "@/components/Card";
+import Detail from "@/components/Detail";
 
-export default function About() {
+export default function About({
+  sets,
+  hints,
+}: {
+  sets: Triple[];
+  hints: number;
+}) {
   return (
-    <>
+    <div className="flex max-w-150 flex-col gap-6 p-8">
+      <h2>
+        <ChartColumn />
+        This game
+      </h2>
+
+      <div className="flex flex-wrap gap-x-8">
+        <Detail label="Sets made" value={sets.length} />
+        <Detail label="Sets in dealt" value={hints} />
+        <Detail label="Cards used" value={sets.length * 3} />
+        <Detail label="Cards left" value={81 - sets.length * 3} />
+      </div>
+
+      <div className="flex min-h-20 gap-10 overflow-x-auto bg-slate-50 p-2">
+        {sets.map((set, index) => (
+          <div key={index} className="flex gap-1">
+            {set.map((card) => (
+              <div key={card.id} className="w-4">
+                <Card
+                  card={card}
+                  stripes={5}
+                  thickness={3}
+                  className="h-full rounded!"
+                />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      <hr />
+
       <h2>
         <Play />
         How to play
@@ -20,7 +58,7 @@ export default function About() {
         A <b>set</b> is <b>3 cards</b> that have...
       </p>
 
-      <div className="grid max-w-max grid-cols-[auto_repeat(5,auto)] items-center gap-x-4">
+      <div className="grid max-w-max shrink-0 auto-rows-min grid-cols-[repeat(6,min-content)] items-center gap-x-4 overflow-x-auto whitespace-nowrap">
         {["numbers", "fills", "colors", "shapes"].map((property, index) => (
           <Fragment key={index}>
             <ChevronRight />
@@ -37,7 +75,7 @@ export default function About() {
       </div>
 
       <p>
-        Find <b>sets</b> until there are no cards left!
+        Keep making <b>sets</b> until there are no cards left!
       </p>
 
       <hr />
@@ -47,7 +85,7 @@ export default function About() {
         which each have <b>3 variations</b>:
       </p>
 
-      <div className="grid max-w-max grid-cols-[auto_repeat(4,1fr)] items-center gap-x-4">
+      <div className="grid shrink-0 auto-rows-min grid-cols-[repeat(5,min-content)] items-center gap-x-4 overflow-x-auto whitespace-nowrap">
         {(
           [
             ["number", numbers],
@@ -57,7 +95,7 @@ export default function About() {
           ] as const
         ).map(([property, values], index) => (
           <Fragment key={index}>
-            <ChevronRight />
+            <ChevronRight className="w-10" />
             <span>
               a <b>{property}</b>:
             </span>
@@ -83,16 +121,20 @@ export default function About() {
 
       {examples.map(([set, description], index) => (
         <div key={index} className="flex flex-col gap-2">
-          <div className="flex gap-1">
+          <div className="flex gap-2">
             {set.map(([number, fill, color, shape], index) => (
               <Card
                 key={index}
                 className="w-16"
-                card={{ id: uniqueId("card-"), number, fill, color, shape }}
+                card={{ id: uniqueId(), number, fill, color, shape }}
               />
             ))}
           </div>
-          <p>{description}</p>
+          <p className="flex flex-col">
+            {description.map((desc, i) => (
+              <span key={i}>{desc}</span>
+            ))}
+          </p>
         </div>
       ))}
 
@@ -113,7 +155,7 @@ export default function About() {
           Source code on GitHub
         </a>
       </p>
-    </>
+    </div>
   );
 }
 
@@ -124,7 +166,7 @@ const examples = [
       ["two", "hollow", "red", "oval"],
       ["three", "hollow", "red", "oval"],
     ],
-    "Different numbers, same fill, same color, same shape",
+    ["different numbers", " same fill", " same color", " same shape"],
   ],
   [
     [
@@ -132,7 +174,7 @@ const examples = [
       ["two", "striped", "blue", "rectangle"],
       ["one", "hollow", "blue", "rectangle"],
     ],
-    "Different numbers, different fills, same color, same shape",
+    ["different numbers", "different fills", "same color", "same shape"],
   ],
   [
     [
@@ -140,7 +182,7 @@ const examples = [
       ["two", "striped", "green", "oval"],
       ["two", "hollow", "blue", "rectangle"],
     ],
-    "Same number, different fills, different colors, different shapes",
+    ["same number", "different fills", "different colors", "different shapes"],
   ],
   [
     [
@@ -148,7 +190,12 @@ const examples = [
       ["two", "solid", "blue", "diamond"],
       ["one", "striped", "green", "oval"],
     ],
-    "Different numbers, different fills, different colors, different shapes",
+    [
+      "different numbers",
+      "different fills",
+      "different colors",
+      "different shapes",
+    ],
   ],
   [
     [
@@ -156,8 +203,11 @@ const examples = [
       ["two", "striped", "blue", "oval"],
       ["three", "solid", "green", "diamond"],
     ],
-    <>
-      <b>NOT A SET!</b> 2 ovals and 1 diamond.
-    </>,
+    [
+      <b>NOT A SET!</b>,
+      "Shapes not all same/different",
+      "2 oval cards",
+      "1 diamond card",
+    ],
   ],
 ] as const;

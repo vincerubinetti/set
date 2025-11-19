@@ -40,7 +40,7 @@ export default function Card({
   const number = { one: 1, two: 2, three: 3 }[card.number];
 
   /** stripe fill pattern id */
-  const pattern = card.fill === "striped" ? uniqueId("pattern-") : "";
+  const pattern = card.fill === "striped" ? uniqueId() : "";
 
   /** fill attr */
   const fill = {
@@ -103,7 +103,7 @@ export default function Card({
     <svg
       viewBox={[-svgWidth / 2, -svgHeight / 2, svgWidth, svgHeight].join(" ")}
       className={clsx(
-        "overflow-visible rounded-lg border border-slate-300 bg-white",
+        "overflow-visible rounded border border-slate-300 bg-white",
         className,
       )}
       strokeWidth={thickness}

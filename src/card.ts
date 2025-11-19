@@ -20,19 +20,18 @@ export const getDeck = () =>
       ),
     )
     .flat(3)
-    .map((card) => ({ ...card, id: uniqueId("card-") }));
+    .map((card) => ({ ...card, id: uniqueId() }));
 
 export type Cards = ReturnType<typeof getDeck>;
 export type Card = Cards[number];
 export type Triple = [Card, Card, Card];
 
 /** create shuffled copy of cards */
-export const shuffleCards = (cards: Card[]) =>
-  shuffle(window.structuredClone(cards));
+export const shuffleCards = (cards: Card[]) => shuffle(cards);
 
 /** create copy of cards sorted by properties */
 export const sortCards = (cards: Card[]) =>
-  orderBy(window.structuredClone(cards), [
+  orderBy(cards, [
     (value) => numbers.indexOf(value.number),
     (value) => fills.indexOf(value.fill),
     (value) => colors.indexOf(value.color),

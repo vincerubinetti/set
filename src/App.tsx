@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useEventListener } from "@reactuses/core";
 import clsx from "clsx";
 import { isEqual, now, range, sample } from "lodash";
 import {
-  BadgeQuestionMark,
   Check,
+  CircleQuestionMark,
   Lightbulb,
   Plus,
   RefreshCcw,
@@ -91,8 +90,8 @@ export default function App() {
   /** hinted cards */
   const [hinted, setHinted] = useState<Cards>([]);
 
-  /** is card being hinted */
-  const isHinted = (card: CardType) => hinted.includes(card);
+  /** are table cards already sorted */
+  const sorted = isEqual(table, sortCards(table));
 
   /** shuffle cards on table */
   const shuffle = () => setTable(shuffleCards(table));
@@ -101,7 +100,7 @@ export default function App() {
   const sort = () => setTable(sortCards(table));
 
   /** get hint in cards on table */
-  const hint = async () => {
+  const hint = () => {
     const hints = findSets(table);
     if (!hints.length) return;
     let index = 0;
@@ -114,14 +113,10 @@ export default function App() {
     } else
       /** otherwise choose random hint */
       index = sample(range(hints.length))!;
-
-    /** reset animations */
-    setHinted([]);
-    await sleep();
-
     /** show hint */
     setHinted(hints[index]!);
-    penalize();
+    setSelected(hints[index]!.slice(0, -1));
+    penalize(60);
   };
 
   /** move card from undealt to table */
@@ -134,19 +129,19 @@ export default function App() {
 
   /** manually deal more cards */
   const more = () => {
-    if (table.length >= 21) return;
     deal(3);
-    penalize();
+    penalize(10);
   };
 
   /** penalize player by adding more time */
-  const penalize = () => {
+  const penalize = (seconds: number) => {
     toast(
       <>
-        <Plus className="text-red-500" />1 minute
+        <Plus className="text-red-500" />
+        {seconds}s
       </>,
     );
-    setStart((prev) => prev - 1000 * 60);
+    setStart((prev) => prev - 1000 * seconds);
   };
 
   /** auto-deal new cards */
@@ -193,69 +188,72 @@ export default function App() {
   }, [selected, deselect, make]);
 
   /** check if game over */
-  if (!won && !undealt.length && !findSets(table).length) {
+  if (!won && !undealt.length && !findSets(table).length && sets.length) {
     setEnd(now());
     setWon(true);
   }
 
-  /** cheat */
-  useEventListener("cheat", () => {
+  // @ts-expect-error ignore
+  // eslint-disable-next-line
+  window.cheat = () => {
     const set = findSets(table)[0];
     if (!set) return;
     setSelected(set);
-  });
+  };
 
   return (
     <>
-      <header className="flex items-center justify-between bg-slate-50 max-sm:flex-col">
-        <div className="flex grow basis-0 flex-wrap items-center px-1 py-1 max-sm:justify-center">
-          <Button onClick={newGame}>
+      <header className="flex items-center gap-4 bg-slate-50">
+        <h1 className="grow p-4 text-3xl leading-none tracking-widest text-indigo-700 uppercase">
+          {won
+            ? "You win!".split("").map((letter, index) => (
+                <span
+                  key={index}
+                  className="animate-win inline-block whitespace-pre"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  {letter}
+                </span>
+              ))
+            : "SET"}
+        </h1>
+
+        <div className="flex flex-wrap items-center gap-4">
+          <Detail label="Sets" value={sets.length} className="max-sm:sr-only" />
+
+          <Detail
+            label="Cards"
+            value={81 - sets.length * 3}
+            className="max-sm:sr-only"
+          />
+
+          <Time start={start} end={end} />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1 p-2">
+          <Button onClick={newGame} aria-label="New game">
             <RefreshCcw />
-            <span>New</span>
           </Button>
 
           <Dialog
             trigger={
-              <Button>
-                <BadgeQuestionMark />
-                <span>About</span>
+              <Button aria-label="About">
+                <CircleQuestionMark />
               </Button>
             }
-            content={<About />}
+            content={<About sets={sets} hints={findSets(table).length} />}
           />
 
-          <Button onClick={hint}>
+          <Button onClick={hint} aria-label="Hint">
             <Lightbulb />
-            <span>Hint</span>
           </Button>
 
-          <Button onClick={more}>
-            <Plus />
-            <span>Deal</span>
+          <Button
+            onClick={sorted ? shuffle : sort}
+            aria-label={sorted ? "Shuffle" : "Sort"}
+          >
+            {sorted ? <Shuffle /> : <SortDesc />}
           </Button>
-
-          <Button onClick={shuffle}>
-            <Shuffle />
-            <span>Shuffle</span>
-          </Button>
-
-          <Button onClick={sort}>
-            <SortDesc />
-            <span>Sort</span>
-          </Button>
-        </div>
-
-        <h1 className="grow basis-0 p-1 text-center text-3xl tracking-widest text-indigo-700">
-          {won ? <span className="">You Win!</span> : "SET"}
-        </h1>
-
-        <div className="flex grow basis-0 flex-wrap items-center justify-end gap-4 p-1 max-sm:justify-center">
-          <Detail label="Time" value={<Time start={start} end={end} />} />
-          <Detail
-            label="Left"
-            value={(undealt.length + table.length).toLocaleString()}
-          />
-          <Detail label="Made" value={(3 * sets.length).toLocaleString()} />
         </div>
       </header>
 
@@ -268,7 +266,7 @@ export default function App() {
             {table.map((card) => (
               <motion.button
                 key={card.id}
-                {...motionProps}
+                {...motionProps()}
                 className={"transition-[scale] hover:scale-105"}
                 onClick={(event) => {
                   event.stopPropagation();
@@ -278,64 +276,43 @@ export default function App() {
                 <Card
                   card={card}
                   className={clsx(
-                    "rounded-lg",
+                    "rounded",
                     isSelected(card) && "border-3! border-black!",
-                    isHinted(card) && "animate-hint",
                   )}
                 />
               </motion.button>
             ))}
+            {table.length < 21 && (
+              <motion.button
+                {...motionProps()}
+                className="grid aspect-square w-full place-items-center place-self-center text-slate-400"
+                onClick={more}
+              >
+                <Plus />
+              </motion.button>
+            )}
           </AnimatePresence>
         </div>
 
         <Toasts />
       </main>
-
-      <footer
-        ref={setsRef}
-        className="flex min-h-14 gap-8 overflow-x-auto bg-slate-50 p-2"
-      >
-        {sets.map((set, index) => (
-          <div key={index} className="flex gap-1">
-            <AnimatePresence mode="popLayout">
-              {set.map((card) => (
-                <motion.div key={card.id} {...motionProps} className="w-2">
-                  <Card
-                    card={card}
-                    stripes={5}
-                    thickness={3}
-                    className="h-10 rounded!"
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        ))}
-      </footer>
     </>
   );
 }
 
-export const motionProps: MotionNodeAnimationOptions & MotionNodeLayoutOptions =
-  {
-    layout: true,
-    initial: { opacity: 0, y: -100 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: 100 },
-    transition: { ease: "easeInOut", duration: 0.2 },
-  };
+export const motionProps = (): MotionNodeAnimationOptions &
+  MotionNodeLayoutOptions => ({
+  layout: true,
+  initial: { opacity: 0, y: -100 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: 100 },
+  transition: { ease: "easeInOut", duration: 0.25 },
+});
 
 /** time elapsed */
 const Time = ({ start, end }: { start: number; end: number }) => {
   const now = useNow(end === 0);
   end ||= now;
-  return <>{formatTime(end - start)}</>;
+  if (end < start) end = start;
+  return <span className="tabular-nums">{formatTime(end - start)}</span>;
 };
-
-declare global {
-  interface Window {
-    cheat: () => void;
-  }
-}
-
-window.cheat = () => void window.dispatchEvent(new Event("cheat"));
