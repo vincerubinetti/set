@@ -30,7 +30,6 @@ import {
 } from "@/card";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
-import Detail from "@/components/Detail";
 import Dialog from "@/components/Dialog";
 import Toasts, { toast } from "@/components/Toasts";
 import { useNow, useStorage } from "@/util/hooks";
