@@ -2,6 +2,7 @@ import { intervalToDuration } from "date-fns";
 
 /** ms in human readable format */
 export const formatTime = (ms: number) => {
+  ms = Math.round(ms / 1000) * 1000;
   const {
     hours = 0,
     minutes = 0,

@@ -109,6 +109,7 @@ export default function Card({
       strokeWidth={thickness}
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-label={label(card)}
       {...props}
     >
       {/* striped fill pattern */}
@@ -140,3 +141,8 @@ export default function Card({
     </svg>
   );
 }
+
+/** text label for card */
+const label = (card: Card) =>
+  /** natural english adjective order */
+  [card.number, card.color, card.fill, card.shape].join(" ");

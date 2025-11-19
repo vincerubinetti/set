@@ -1,7 +1,8 @@
 import { Fragment } from "react/jsx-runtime";
 import { uniqueId } from "lodash";
 import { ChartColumn, ChevronRight, Info, Lightbulb, Play } from "lucide-react";
-import { colors, fills, numbers, shapes, type Triple } from "@/card";
+import { colors, fills, numbers, shapes } from "@/card";
+import type { Triple } from "@/card";
 import Card from "@/components/Card";
 import Detail from "@/components/Detail";
 
@@ -21,9 +22,9 @@ export default function About({
 
       <div className="flex flex-wrap gap-x-8">
         <Detail label="Sets made" value={sets.length} />
-        <Detail label="Sets in dealt" value={hints} />
         <Detail label="Cards used" value={sets.length * 3} />
         <Detail label="Cards left" value={81 - sets.length * 3} />
+        <Detail label="Sets in dealt" value={hints} />
       </div>
 
       <div className="flex min-h-20 gap-10 overflow-x-auto bg-slate-50 p-2">

@@ -11,28 +11,20 @@ import {
   SortDesc,
   X,
 } from "lucide-react";
-import {
-  AnimatePresence,
-  motion,
-  type MotionNodeAnimationOptions,
-  type MotionNodeLayoutOptions,
+import { AnimatePresence, motion } from "motion/react";
+import type {
+  MotionNodeAnimationOptions,
+  MotionNodeLayoutOptions,
 } from "motion/react";
 import About from "@/About";
-import {
-  findSets,
-  getDeck,
-  isSet,
-  shuffleCards,
-  sortCards,
-  type Cards,
-  type Card as CardType,
-  type Triple,
-} from "@/card";
+import { findSets, getDeck, isSet, shuffleCards, sortCards } from "@/card";
+import type { Cards, Card as CardType, Triple } from "@/card";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
 import Dialog from "@/components/Dialog";
+import Ring from "@/components/Ring";
 import Toasts, { toast } from "@/components/Toasts";
-import { useNow, useStorage } from "@/util/hooks";
+import { useStorage } from "@/util/hooks";
 import { sleep } from "@/util/misc";
 import { formatTime } from "@/util/string";
 
@@ -51,11 +43,8 @@ export default function App() {
   /** selected cards */
   const [selected, setSelected] = useState<Cards>([]);
 
-  /** game start time stamp */
-  const [start, setStart] = useStorage("start", 0);
-
-  /** game end time stamp */
-  const [end, setEnd] = useStorage("end", 0);
+  /** game timer */
+  const [time, setTime] = useStorage("time", 0);
 
   /** is game over */
   const [won, setWon] = useStorage("won", false);
@@ -65,14 +54,13 @@ export default function App() {
     window.localStorage.clear();
     setUndealt(shuffleCards(getDeck()));
     setTable([]);
-    setStart(now());
     setSets([]);
-    setEnd(0);
+    setTime(0);
     setWon(false);
   };
 
   /** new game if none saved */
-  if (!undealt.length && !table.length && !start) newGame();
+  if (!undealt.length && !table.length && !time) newGame();
 
   /** is card selected */
   const isSelected = (card: CardType) => selected.includes(card);
@@ -140,7 +128,7 @@ export default function App() {
         {seconds}s
       </>,
     );
-    setStart((prev) => prev - 1000 * seconds);
+    setTime((prev) => prev + 1000 * seconds);
   };
 
   /** auto-deal new cards */
@@ -186,24 +174,23 @@ export default function App() {
     })();
   }, [selected, deselect, make]);
 
+  /** possible sets left to find */
+  const setsLeft = findSets(table.concat(undealt));
+
+  /** roughly linear progress */
+  const progress = 1 - (setsLeft.length / 1080) ** (1 / 2.5);
+
   /** check if game over */
-  if (!won && !undealt.length && !findSets(table).length && sets.length) {
-    setEnd(now());
-    setWon(true);
-  }
+  if (!won && !setsLeft.length && sets.length) setWon(true);
 
   // @ts-expect-error ignore
   // eslint-disable-next-line
-  window.cheat = () => {
-    const set = findSets(table)[0];
-    if (!set) return;
-    setSelected(set);
-  };
+  window.cheat = () => setSelected(findSets(table)[0] ?? []);
 
   return (
     <>
-      <header className="flex items-center gap-4 bg-slate-50">
-        <h1 className="grow p-4 text-3xl leading-none tracking-widest text-indigo-700 uppercase">
+      <header className="flex items-center gap-4 bg-slate-50 p-2">
+        <h1 className="grow px-1 text-3xl leading-none tracking-widest text-indigo-800 uppercase">
           {won
             ? "You win!".split("").map((letter, index) => (
                 <span
@@ -217,9 +204,12 @@ export default function App() {
             : "SET"}
         </h1>
 
-        <Time start={start} end={end} />
+        <Time time={time} setTime={setTime} won={won} />
 
-        <div className="flex flex-wrap items-center gap-1 p-2">
+        {/* progress pie chart */}
+        <Ring progress={progress} className="w-4" />
+
+        <div className="flex flex-wrap items-center gap-1">
           <Button onClick={newGame} aria-label="New game">
             <RefreshCcw />
           </Button>
@@ -276,6 +266,7 @@ export default function App() {
                 {...motionProps()}
                 className="grid aspect-square w-full place-items-center place-self-center text-slate-400"
                 onClick={more}
+                aria-label="Draw more cards"
               >
                 <Plus />
               </motion.button>
@@ -289,6 +280,7 @@ export default function App() {
   );
 }
 
+/** consistent animation settings */
 export const motionProps = (): MotionNodeAnimationOptions &
   MotionNodeLayoutOptions => ({
   layout: true,
@@ -299,9 +291,31 @@ export const motionProps = (): MotionNodeAnimationOptions &
 });
 
 /** time elapsed */
-const Time = ({ start, end }: { start: number; end: number }) => {
-  const now = useNow(end === 0);
-  end ||= now;
-  if (end < start) end = start;
-  return <span className="tabular-nums">{formatTime(end - start)}</span>;
+const Time = ({
+  time,
+  setTime,
+  won,
+}: {
+  time: number;
+  setTime: React.Dispatch<React.SetStateAction<number>>;
+  won: boolean;
+}) => {
+  /** timestamp at last tick */
+  const last = useRef(now());
+
+  useEffect(() => {
+    if (won) return;
+    /** tick clock one sec */
+    const tick = () => {
+      const time = now();
+      /** loosely correct drift */
+      const delta = time - last.current;
+      setTime((prev) => prev + delta);
+      last.current = time;
+    };
+    const timer = window.setInterval(tick, 1000);
+    return () => window.clearInterval(timer);
+  }, [won, setTime]);
+
+  return <span className="tabular-nums">{formatTime(time)}</span>;
 };
