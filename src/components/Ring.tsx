@@ -10,7 +10,7 @@ export default function Ring({ progress, ...props }: Props) {
       <circle r="50" className="stroke-gray-300" />
       <circle
         r="50"
-        className="stroke-slate-700"
+        className="stroke-slate-600"
         pathLength="1"
         strokeDasharray={[progress, 1].join(" ")}
         transform="rotate(-90)"

@@ -6,8 +6,9 @@ import {
   useState,
 } from "react";
 import type { Dispatch, Ref, SetStateAction } from "react";
+import { useInterval } from "@reactuses/core";
 import clsx from "clsx";
-import { isEqual, now, range, sample } from "lodash";
+import { isEqual, now, random, sample } from "lodash";
 import {
   Check,
   CircleQuestionMark,
@@ -22,6 +23,7 @@ import { AnimatePresence, motion } from "motion/react";
 import type {
   MotionNodeAnimationOptions,
   MotionNodeLayoutOptions,
+  TargetAndTransition,
 } from "motion/react";
 import About from "@/About";
 import { findSets, getDeck, isSet, shuffleCards, sortCards } from "@/card";
@@ -32,6 +34,7 @@ import Dialog from "@/components/Dialog";
 import Ring from "@/components/Ring";
 import Toasts, { toast } from "@/components/Toasts";
 import { useStorage } from "@/util/hooks";
+import { cos, sin } from "@/util/math";
 import { sleep } from "@/util/misc";
 import { formatTime } from "@/util/string";
 
@@ -80,9 +83,6 @@ export default function App() {
   /** deselect all cards */
   const deselect = useCallback(() => setSelected([]), []);
 
-  /** hinted cards */
-  const [hinted, setHinted] = useState<Cards>([]);
-
   /** are table cards already sorted */
   const sorted = isEqual(table, sortCards(table));
 
@@ -96,19 +96,11 @@ export default function App() {
   const hint = () => {
     const hints = findSets(table);
     if (!hints.length) return;
-    let index = 0;
-    /** if hint already selected */
-    if (hinted.length === 3) {
-      /** select next hint */
-      index = hints.findIndex((set) => isEqual(set, hinted));
-      index++;
-      index %= hints.length;
-    } else
-      /** otherwise choose random hint */
-      index = sample(range(hints.length))!;
-    /** show hint */
-    setHinted(hints[index]!);
-    setSelected(hints[index]!.slice(0, -1));
+    let pair = selected;
+    while (hints.length > 1 && isEqual(pair, selected))
+      pair = sample(hints)!.slice(0, -1);
+    if (isEqual(pair, selected)) return;
+    setSelected(pair);
     penalize(60);
   };
 
@@ -197,17 +189,18 @@ export default function App() {
     <>
       <header className="flex items-center gap-4 bg-slate-50 p-2">
         <h1 className="grow px-1 text-3xl leading-none tracking-widest text-indigo-800 uppercase">
-          {won
-            ? "You win!".split("").map((letter, index) => (
-                <span
-                  key={index}
-                  className="animate-win inline-block whitespace-pre"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  {letter}
-                </span>
-              ))
-            : "SET"}
+          {!won && "SET"}
+
+          {!!won &&
+            "You win!".split("").map((letter, index) => (
+              <span
+                key={index}
+                className="animate-win inline-block whitespace-pre"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                {letter}
+              </span>
+            ))}
         </h1>
 
         <Time ref={timeRef} won={won} />
@@ -281,6 +274,8 @@ export default function App() {
         </div>
 
         <Toasts />
+
+        {won && <Win />}
       </main>
     </>
   );
@@ -325,4 +320,64 @@ const Time = ({ ref, won }: { ref: Ref<TimeRef>; won: boolean }) => {
   }, [won, setTime]);
 
   return <span className="tabular-nums">{formatTime(time)}</span>;
+};
+
+/** win animation */
+const Win = () => {
+  /** options */
+  const duration = 2000;
+  const interval = 100;
+
+  type Particle = {
+    card: CardType;
+    animation: TargetAndTransition;
+  };
+
+  const [particles, setParticles] = useState<Record<string, Particle>>({});
+
+  useInterval(() => {
+    /** random card */
+    const card = sample(getDeck())!;
+    const id = card.id;
+
+    /** random start/end */
+    const start = { x: random(100), y: random(100) };
+    const angle = random(360);
+    const end = { x: start.x + 10 * cos(angle), y: start.y + 10 * sin(angle) };
+
+    /** keyframes */
+    const animation = {
+      left: [`${start.x}vw`, `${end.x}vw`],
+      top: [`${start.y}vh`, `${end.y}vh`],
+      opacity: [0, 0.5, 0],
+      rotate: [angle, angle + 180 * (Math.random() < 0.5 ? -1 : 1)],
+    };
+
+    /** create */
+    setParticles((prev) => ({ ...prev, [id]: { card, animation } }));
+  }, interval);
+
+  return (
+    <AnimatePresence>
+      {Object.entries(particles).map(([id, { card, animation }]) => (
+        <motion.div
+          key={id}
+          className="pointer-events-none fixed -translate-1/2"
+          initial={{ opacity: 0 }}
+          animate={animation}
+          transition={{ duration: duration / 1000 }}
+          onAnimationComplete={() => {
+            /** delete */
+            setParticles((prev) => {
+              const newCards = { ...prev };
+              delete newCards[id];
+              return newCards;
+            });
+          }}
+        >
+          <Card card={card} className="w-20" />
+        </motion.div>
+      ))}
+    </AnimatePresence>
+  );
 };

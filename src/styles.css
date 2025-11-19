@@ -9,6 +9,9 @@
     25% {
       translate: 0 -5px;
     }
+    50% {
+      translate: 0 0;
+    }
   }
 }
 
