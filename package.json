@@ -1,39 +1,49 @@
 {
-  "name": "set",
-  "version": "0.1.0",
-  "private": true,
-  "homepage": "./",
-  "dependencies": {
-    "react": "^16.9.0",
-    "react-dom": "^16.9.0",
-    "react-pose": "^4.0.8",
-    "react-scripts": "^3.1.2"
-  },
+  "type": "module",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "node ./scripts/build-non-split.js",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "dev": "vite --open",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --fix",
+    "format": "prettier --write src/",
+    "test:types": "tsc -b",
+    "test:lint": "eslint .",
+    "test:format": "prettier --check src/",
+    "test": "bun run test:types && bun run test:lint && bun run test:format"
   },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "dependencies": {
+    "@base-ui-components/react": "^1.0.0-beta.6",
+    "@reactuses/core": "^6.1.5",
+    "@tailwindcss/vite": "^4.1.17",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "jotai": "^2.15.1",
+    "lodash": "^4.17.21",
+    "lucide-react": "^0.554.0",
+    "motion": "^12.23.24",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tailwindcss": "^4.1.17"
   },
   "devDependencies": {
-    "eslint-config-google": "^0.14.0",
-    "eslint-plugin-html": "^6.0.0",
-    "eslint-plugin-react": "^7.14.3",
-    "rewire": "^4.0.1"
+    "@eslint/js": "^9.39.1",
+    "@ianvs/prettier-plugin-sort-imports": "^4.7.0",
+    "@types/lodash": "^4.17.20",
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "postcss": "^8.5.6",
+    "prettier": "^3.6.2",
+    "prettier-plugin-css-order": "^2.1.2",
+    "prettier-plugin-jsdoc": "^1.3.3",
+    "prettier-plugin-tailwindcss": "^0.7.1",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.3",
+    "vite": "^7.2.2"
   }
 }

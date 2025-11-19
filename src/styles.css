@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", sans-serif;
+
+  --animate-hint: hint 1s ease-in-out infinite;
+
+  @keyframes hint {
+    50% {
+      box-shadow: 0 0 --spacing(4) theme(colors.indigo.300);
+    }
+  }
+}
+
+* {
+  @apply font-sans;
+}
+
+html {
+  @apply font-thin;
+}
+
+@media (max-width: 640px) {
+  html {
+    --spacing: 3.5px;
+    font-size: 90%;
+  }
+}
+
+@media (max-width: 400px) {
+  html {
+    --spacing: 3px;
+    font-size: 80%;
+  }
+}
+
+#root {
+  @apply flex h-screen flex-col;
+}
+
+hr {
+  @apply my-4 border-slate-300;
+}
+
+h2 {
+  @apply flex items-center gap-2 text-2xl;
+}
+
+h2 > svg {
+  @apply text-indigo-500;
+}
+
+a {
+  @apply inline-flex items-center gap-2 text-indigo-500 underline hover:text-current;
+}
+
+b {
+  @apply font-medium;
+}
+
+button {
+  @apply cursor-pointer;
+}
+
+button > svg {
+  @apply text-xl;
+}
+
+svg {
+  @apply shrink-0 overflow-visible;
+}
+
+.lucide {
+  width: unset;
+  height: 1em;
+}
+
+:not(html) ::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background-color: theme(--color-slate-100);
+}
+
+:not(html) ::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background-color: theme(--color-slate-300);
+}
