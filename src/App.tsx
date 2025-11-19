@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
+import type { Dispatch, Ref, SetStateAction } from "react";
 import clsx from "clsx";
 import { isEqual, now, range, sample } from "lodash";
 import {
@@ -43,11 +50,10 @@ export default function App() {
   /** selected cards */
   const [selected, setSelected] = useState<Cards>([]);
 
-  /** game timer */
-  const [time, setTime] = useStorage("time", 0);
-
   /** is game over */
   const [won, setWon] = useStorage("won", false);
+
+  const timeRef = useRef<TimeRef>(null);
 
   /** new game */
   const newGame = () => {
@@ -55,12 +61,12 @@ export default function App() {
     setUndealt(shuffleCards(getDeck()));
     setTable([]);
     setSets([]);
-    setTime(0);
+    timeRef.current?.setTime(0);
     setWon(false);
   };
 
   /** new game if none saved */
-  if (!undealt.length && !table.length && !time) newGame();
+  if (!undealt.length && !table.length && !sets.length && !won) newGame();
 
   /** is card selected */
   const isSelected = (card: CardType) => selected.includes(card);
@@ -128,7 +134,7 @@ export default function App() {
         {seconds}s
       </>,
     );
-    setTime((prev) => prev + 1000 * seconds);
+    timeRef.current?.setTime((prev) => prev + 1000 * seconds);
   };
 
   /** auto-deal new cards */
@@ -204,7 +210,7 @@ export default function App() {
             : "SET"}
         </h1>
 
-        <Time time={time} setTime={setTime} won={won} />
+        <Time ref={timeRef} won={won} />
 
         {/* progress pie chart */}
         <Ring progress={progress} className="w-4" />
@@ -290,16 +296,17 @@ export const motionProps = (): MotionNodeAnimationOptions &
   transition: { ease: "easeInOut", duration: 0.25 },
 });
 
+type TimeRef = {
+  setTime: Dispatch<SetStateAction<number>>;
+};
+
 /** time elapsed */
-const Time = ({
-  time,
-  setTime,
-  won,
-}: {
-  time: number;
-  setTime: React.Dispatch<React.SetStateAction<number>>;
-  won: boolean;
-}) => {
+const Time = ({ ref, won }: { ref: Ref<TimeRef>; won: boolean }) => {
+  /** game timer */
+  const [time, setTime] = useStorage("time", 0);
+
+  useImperativeHandle(ref, () => ({ setTime }), [setTime]);
+
   /** timestamp at last tick */
   const last = useRef(now());
 
