@@ -1,0 +1,28 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="-46 -46 92 92"
+  stroke-width="1.5"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <rect x="-46" y="-46" width="92" height="92" fill="#eef2ff" />
+
+  <polygon
+    points="-20 -28 0 -38 20 -28 0 -18"
+    fill="#f43f5e"
+    stroke="#f43f5e"
+    transform="translate(-15, 10) scale(1.25)"
+  />
+  <polygon
+    points="-20 0 0 -10 20 0 0 10"
+    fill="#10b981"
+    stroke="#10b981"
+    transform="translate(0, 0) scale(1.25)"
+  />
+  <polygon
+    points="-20 28 0 18 20 28 0 38"
+    fill="#3b82f6"
+    stroke="#3b82f6"
+    transform="translate(15, -10) scale(1.25)"
+  />
+</svg>

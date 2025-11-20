@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import { Fragment, type ComponentProps } from "react";
 import clsx from "clsx";
 import { range, uniqueId } from "lodash";
 import type { Card } from "@/card";
@@ -133,11 +133,11 @@ export default function Card({
       {/* draw shape N times */}
       {range(number)
         .map((index) => index - (number - 1) / 2)
-        .map((index) => {
-          return (
-            <g key={index}>{shape(0, index * height + index * spacing)}</g>
-          );
-        })}
+        .map((index) => (
+          <Fragment key={index}>
+            {shape(0, index * height + index * spacing)}
+          </Fragment>
+        ))}
     </svg>
   );
 }

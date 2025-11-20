@@ -12,7 +12,7 @@ export default function Detail({ label, value, className, ...props }: Props) {
       className={clsx("flex items-center justify-center gap-2", className)}
       {...props}
     >
-      <span className="text-slate-400">{label}</span>
+      <span className="text-slate-500">{label}</span>
       <span>{typeof value === "number" ? value.toLocaleString() : value}</span>
     </div>
   );

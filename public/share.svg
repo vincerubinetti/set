@@ -1,0 +1,31 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="-90 -100 300 200"
+  stroke-width="1.5"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900");
+  </style>
+  <rect x="-90" y="-100" width="300" height="200" fill="#eef2ff" />
+
+  <polygon
+    points="-20 -28 0 -38 20 -28 0 -18"
+    fill="#f43f5e"
+    stroke="#f43f5e"
+  />
+  <polygon points="-20 0 0 -10 20 0 0 10" fill="#10b981" stroke="#10b981" />
+  <polygon points="-20 28 0 18 20 28 0 38" fill="#3b82f6" stroke="#3b82f6" />
+
+  <text
+    x="50"
+    dominant-baseline="central"
+    font-size="50"
+    font-family="outfit"
+    letter-spacing="0.1em"
+    fill="#6366f1"
+  >
+    SET
+  </text>
+</svg>

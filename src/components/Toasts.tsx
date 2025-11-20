@@ -20,13 +20,13 @@ export default function Toasts() {
   const toasts = useAtomValue(toastsAtom);
 
   return (
-    <div className="pointer-events-none absolute inset-0 flex flex-col gap-2 p-2">
+    <div className="pointer-events-none absolute inset-0 flex flex-col items-end gap-2 p-2">
       <AnimatePresence mode="popLayout">
         {[...toasts].reverse().map(({ id, content }) => (
           <motion.div
             key={id}
             {...motionProps()}
-            className="flex items-center justify-end gap-2 p-2"
+            className="flex items-center justify-end gap-2 rounded bg-white p-2"
           >
             {content}
           </motion.div>

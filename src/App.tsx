@@ -31,7 +31,7 @@ import type { Cards, Card as CardType, Triple } from "@/card";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
 import Dialog from "@/components/Dialog";
-import Ring from "@/components/Ring";
+import Progress from "@/components/Progress";
 import Toasts, { toast } from "@/components/Toasts";
 import { useStorage } from "@/util/hooks";
 import { cos, sin } from "@/util/math";
@@ -56,6 +56,7 @@ export default function App() {
   /** is game over */
   const [won, setWon] = useStorage("won", false);
 
+  /** timer component */
   const timeRef = useRef<TimeRef>(null);
 
   /** new game */
@@ -67,9 +68,6 @@ export default function App() {
     timeRef.current?.setTime(0);
     setWon(false);
   };
-
-  /** new game if none saved */
-  if (!undealt.length && !table.length && !sets.length && !won) newGame();
 
   /** is card selected */
   const isSelected = (card: CardType) => selected.includes(card);
@@ -83,26 +81,14 @@ export default function App() {
   /** deselect all cards */
   const deselect = useCallback(() => setSelected([]), []);
 
-  /** are table cards already sorted */
-  const sorted = isEqual(table, sortCards(table));
-
   /** shuffle cards on table */
   const shuffle = () => setTable(shuffleCards(table));
 
   /** sort cards on table */
   const sort = () => setTable(sortCards(table));
 
-  /** get hint in cards on table */
-  const hint = () => {
-    const hints = findSets(table);
-    if (!hints.length) return;
-    let pair = selected;
-    while (hints.length > 1 && isEqual(pair, selected))
-      pair = sample(hints)!.slice(0, -1);
-    if (isEqual(pair, selected)) return;
-    setSelected(pair);
-    penalize(60);
-  };
+  /** are table cards already sorted */
+  const isSorted = isEqual(table, sortCards(table));
 
   /** move card from undealt to table */
   const deal = (number: number) => {
@@ -118,6 +104,18 @@ export default function App() {
     penalize(10);
   };
 
+  /** get hint in cards on table */
+  const hint = () => {
+    const hints = findSets(table);
+    if (!hints.length) return;
+    let pair = selected;
+    while (hints.length > 1 && isEqual(pair, selected))
+      pair = sample(hints)!.slice(0, -1);
+    if (isEqual(pair, selected)) return;
+    setSelected(pair);
+    penalize(60);
+  };
+
   /** penalize player by adding more time */
   const penalize = (seconds: number) => {
     toast(
@@ -129,11 +127,8 @@ export default function App() {
     timeRef.current?.setTime((prev) => prev + 1000 * seconds);
   };
 
-  /** auto-deal new cards */
-  if (table.length < 12 || !findSets(table).length) deal(3);
-
   /** move set from table to sets */
-  const make = useCallback(
+  const makeSet = useCallback(
     async (cards: Triple) => {
       setTable((prev) => prev.filter((card) => !cards.includes(card)));
       setSets((prev) => [...prev, cards]);
@@ -158,7 +153,7 @@ export default function App() {
             Made a set!
           </>,
         );
-        make(selected as Triple);
+        makeSet(selected as Triple);
       } else {
         toast(
           <>
@@ -170,13 +165,19 @@ export default function App() {
       }
       deselect();
     })();
-  }, [selected, deselect, make]);
+  }, [selected, deselect, makeSet]);
 
   /** possible sets left to find */
   const setsLeft = findSets(table.concat(undealt));
 
   /** roughly linear progress */
   const progress = 1 - (setsLeft.length / 1080) ** (1 / 2.5);
+
+  /** new game if none saved */
+  if (!undealt.length && !table.length && !sets.length && !won) newGame();
+
+  /** auto-deal new cards */
+  if ((table.length < 12 || !findSets(table).length) && undealt.length) deal(3);
 
   /** check if game over */
   if (!won && !setsLeft.length && sets.length) setWon(true);
@@ -188,25 +189,13 @@ export default function App() {
   return (
     <>
       <header className="flex items-center gap-4 bg-slate-50 p-2">
-        <h1 className="grow px-1 text-3xl leading-none tracking-widest text-indigo-800 uppercase">
-          {!won && "SET"}
-
-          {!!won &&
-            "You win!".split("").map((letter, index) => (
-              <span
-                key={index}
-                className="animate-win inline-block whitespace-pre"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                {letter}
-              </span>
-            ))}
+        <h1 className="grow px-1 text-3xl leading-none tracking-wide text-indigo-500 uppercase">
+          SET
         </h1>
 
-        <Time ref={timeRef} won={won} />
+        <Progress progress={progress} className="h-2" />
 
-        {/* progress pie chart */}
-        <Ring progress={progress} className="w-4" />
+        <Time ref={timeRef} won={won} />
 
         <div className="flex flex-wrap items-center gap-1">
           <Button onClick={newGame} aria-label="New game">
@@ -227,34 +216,56 @@ export default function App() {
           </Button>
 
           <Button
-            onClick={sorted ? shuffle : sort}
-            aria-label={sorted ? "Shuffle" : "Sort"}
+            onClick={isSorted ? shuffle : sort}
+            aria-label={isSorted ? "Shuffle" : "Sort"}
           >
-            {sorted ? <Shuffle /> : <SortDesc />}
+            {isSorted ? <Shuffle /> : <SortDesc />}
           </Button>
         </div>
       </header>
 
       <main
         className="relative flex grow items-start justify-center overflow-y-auto p-4"
-        onClick={deselect}
+        onClick={(event) => {
+          if (
+            event.nativeEvent
+              .composedPath()
+              .some((el) => el instanceof HTMLButtonElement)
+          )
+            return;
+          deselect();
+        }}
       >
+        {!!won && (
+          <div className="absolute gap-2 uppercase">
+            {"You win!".split("").map((letter, index) => (
+              <span
+                key={index}
+                className="animate-win inline-block text-3xl whitespace-pre"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                {letter}
+              </span>
+            ))}
+          </div>
+        )}
+
         <div className="grid min-h-full w-full max-w-200 grid-cols-[repeat(auto-fit,--spacing(24))] place-content-center gap-4">
           <AnimatePresence mode="popLayout">
             {table.map((card) => (
               <motion.button
                 key={card.id}
                 {...motionProps()}
-                className={"transition-[scale] hover:scale-105"}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  toggleSelected(card);
+                className="inline-flex transition-[scale] hover:scale-105"
+                onPointerDown={() => toggleSelected(card)}
+                onKeyDown={({ key }) => {
+                  if (["Enter", " "].includes(key)) toggleSelected(card);
                 }}
               >
                 <Card
                   card={card}
                   className={clsx(
-                    "rounded",
+                    "w-full",
                     isSelected(card) && "border-3! border-black!",
                   )}
                 />
@@ -263,8 +274,11 @@ export default function App() {
             {table.length < 21 && (
               <motion.button
                 {...motionProps()}
-                className="grid aspect-square w-full place-items-center place-self-center text-slate-400"
-                onClick={more}
+                className="grid aspect-square w-full place-items-center place-self-center rounded-full text-slate-500 transition-[scale] hover:scale-200"
+                onPointerDown={more}
+                onKeyDown={({ key }) => {
+                  if (["Enter", " "].includes(key)) more();
+                }}
                 aria-label="Draw more cards"
               >
                 <Plus />
@@ -324,10 +338,6 @@ const Time = ({ ref, won }: { ref: Ref<TimeRef>; won: boolean }) => {
 
 /** win animation */
 const Win = () => {
-  /** options */
-  const duration = 2000;
-  const interval = 100;
-
   type Particle = {
     card: CardType;
     animation: TargetAndTransition;
@@ -350,12 +360,12 @@ const Win = () => {
       left: [`${start.x}vw`, `${end.x}vw`],
       top: [`${start.y}vh`, `${end.y}vh`],
       opacity: [0, 0.5, 0],
-      rotate: [angle, angle + 180 * (Math.random() < 0.5 ? -1 : 1)],
+      rotate: [angle, angle + 45 * (Math.random() < 0.5 ? -1 : 1)],
     };
 
     /** create */
     setParticles((prev) => ({ ...prev, [id]: { card, animation } }));
-  }, interval);
+  }, 100);
 
   return (
     <AnimatePresence>
@@ -365,7 +375,7 @@ const Win = () => {
           className="pointer-events-none fixed -translate-1/2"
           initial={{ opacity: 0 }}
           animate={animation}
-          transition={{ duration: duration / 1000 }}
+          transition={{ duration: 1 }}
           onAnimationComplete={() => {
             /** delete */
             setParticles((prev) => {
@@ -375,7 +385,7 @@ const Win = () => {
             });
           }}
         >
-          <Card card={card} className="w-20" />
+          <Card card={card} className="w-14" />
         </motion.div>
       ))}
     </AnimatePresence>

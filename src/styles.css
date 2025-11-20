@@ -8,9 +8,11 @@
   @keyframes win {
     25% {
       translate: 0 -5px;
+      color: theme(--color-indigo-500);
     }
     50% {
       translate: 0 0;
+      color: theme(--color-indigo-500);
     }
   }
 }
@@ -26,12 +28,14 @@ html {
 @media (max-width: 600px) {
   html {
     --spacing: 3.25px;
+    font-size: 95%;
   }
 }
 
 @media (max-width: 400px) {
   html {
     --spacing: 2.5px;
+    font-size: 90%;
   }
 }
 
@@ -69,6 +73,10 @@ button > svg {
 
 svg {
   @apply shrink-0 overflow-visible;
+}
+
+:focus-visible {
+  @apply rounded ring-2 ring-indigo-500 outline-none;
 }
 
 .lucide {
