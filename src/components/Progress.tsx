@@ -1,27 +1,20 @@
 import type { ComponentProps } from "react";
+import clsx from "clsx";
 
 type Props = {
   progress: number;
-} & ComponentProps<"svg">;
+} & ComponentProps<"div">;
 
-const width = 50;
-const height = 10;
-
-export default function Progress({ progress, ...props }: Props) {
+export default function Progress({ progress, className, ...props }: Props) {
   return (
-    <svg viewBox={[0, 0, width, height].join(" ")} {...props}>
-      <rect
-        width={width}
-        height={height}
-        className="fill-gray-300"
-        rx={height / 2}
+    <div
+      className={clsx("overflow-hidden rounded-full bg-slate-300", className)}
+      {...props}
+    >
+      <div
+        className="h-full bg-indigo-500"
+        style={{ width: `${progress * 100}%` }}
       />
-      <rect
-        className="fill-indigo-500"
-        width={progress * width}
-        height={height}
-        rx={height / 2}
-      />
-    </svg>
+    </div>
   );
 }

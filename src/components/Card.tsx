@@ -31,9 +31,9 @@ export default function Card({
   /** size of pattern for stripe fill */
   const tile = width / stripes;
 
-  /** width of view box based on 3 shapes and spacing */
+  /** fit view box width based on 3 shapes and spacing */
   const svgWidth = width + spacing * 2;
-  /** height of view box based on 3 shapes and spacing */
+  /** fit view box height based on 3 shapes and spacing */
   const svgHeight = height * 3 + spacing * 2 + spacing * 2;
 
   /** number of shapes */

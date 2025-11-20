@@ -5,12 +5,16 @@ import { uniqueId } from "lodash";
 import { motionProps } from "@/App";
 import { sleep } from "@/util/misc";
 
+/** global toasts */
 const toastsAtom = atom<{ id: string; content: ReactNode }[]>([]);
 
+/** make toasts anywhere */
 export const toast = async (content: ReactNode) => {
   const id = uniqueId();
-  getDefaultStore().set(toastsAtom, (prev) => [...prev, { id, content }]);
+  /** create */
+  getDefaultStore().set(toastsAtom, (prev) => [{ id, content }, ...prev]);
   await sleep(2000);
+  /** delete */
   getDefaultStore().set(toastsAtom, (prev) =>
     prev.filter((toast) => toast.id !== id),
   );
@@ -22,7 +26,7 @@ export default function Toasts() {
   return (
     <div className="pointer-events-none absolute inset-0 flex flex-col items-end gap-2 p-2">
       <AnimatePresence mode="popLayout">
-        {[...toasts].reverse().map(({ id, content }) => (
+        {toasts.map(({ id, content }) => (
           <motion.div
             key={id}
             {...motionProps()}

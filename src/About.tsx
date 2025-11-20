@@ -6,13 +6,13 @@ import type { Triple } from "@/card";
 import Card from "@/components/Card";
 import Detail from "@/components/Detail";
 
-export default function About({
-  sets,
-  hints,
-}: {
+type Props = {
   sets: Triple[];
   hints: number;
-}) {
+};
+
+/** about popup */
+export default function About({ sets, hints }: Props) {
   return (
     <div className="flex max-w-150 flex-col gap-6 p-8">
       <h2>

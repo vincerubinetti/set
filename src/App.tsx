@@ -1,14 +1,6 @@
-import {
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
-import type { Dispatch, Ref, SetStateAction } from "react";
-import { useInterval } from "@reactuses/core";
+import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
-import { isEqual, now, random, sample } from "lodash";
+import { isEqual, sample } from "lodash";
 import {
   Check,
   CircleQuestionMark,
@@ -23,20 +15,20 @@ import { AnimatePresence, motion } from "motion/react";
 import type {
   MotionNodeAnimationOptions,
   MotionNodeLayoutOptions,
-  TargetAndTransition,
 } from "motion/react";
 import About from "@/About";
 import { findSets, getDeck, isSet, shuffleCards, sortCards } from "@/card";
 import type { Cards, Card as CardType, Triple } from "@/card";
 import Button from "@/components/Button";
 import Card from "@/components/Card";
+import type { ClockRef } from "@/components/Clock";
+import Clock from "@/components/Clock";
 import Dialog from "@/components/Dialog";
 import Progress from "@/components/Progress";
 import Toasts, { toast } from "@/components/Toasts";
+import Win from "@/components/Win";
 import { useStorage } from "@/util/hooks";
-import { cos, sin } from "@/util/math";
 import { sleep } from "@/util/misc";
-import { formatTime } from "@/util/string";
 
 export default function App() {
   const setsRef = useRef<HTMLDivElement>(null);
@@ -56,8 +48,8 @@ export default function App() {
   /** is game over */
   const [won, setWon] = useStorage("won", false);
 
-  /** timer component */
-  const timeRef = useRef<TimeRef>(null);
+  /** clock component */
+  const clockRef = useRef<ClockRef>(null);
 
   /** new game */
   const newGame = () => {
@@ -65,7 +57,7 @@ export default function App() {
     setUndealt(shuffleCards(getDeck()));
     setTable([]);
     setSets([]);
-    timeRef.current?.setTime(0);
+    clockRef.current?.setTime(0);
     setWon(false);
   };
 
@@ -124,7 +116,7 @@ export default function App() {
         {seconds}s
       </>,
     );
-    timeRef.current?.setTime((prev) => prev + 1000 * seconds);
+    clockRef.current?.setTime((prev) => prev + 1000 * seconds);
   };
 
   /** move set from table to sets */
@@ -193,9 +185,9 @@ export default function App() {
           SET
         </h1>
 
-        <Progress progress={progress} className="h-2" />
+        <Progress progress={progress} className="h-2 w-10" />
 
-        <Time ref={timeRef} won={won} />
+        <Clock ref={clockRef} won={won} />
 
         <div className="flex flex-wrap items-center gap-1">
           <Button onClick={newGame} aria-label="New game">
@@ -271,7 +263,7 @@ export default function App() {
                 />
               </motion.button>
             ))}
-            {table.length < 21 && (
+            {table.length < 21 && !won && (
               <motion.button
                 {...motionProps()}
                 className="grid aspect-square w-full place-items-center place-self-center rounded-full text-slate-500 transition-[scale] hover:scale-200"
@@ -304,90 +296,3 @@ export const motionProps = (): MotionNodeAnimationOptions &
   exit: { opacity: 0, y: 100 },
   transition: { ease: "easeInOut", duration: 0.25 },
 });
-
-type TimeRef = {
-  setTime: Dispatch<SetStateAction<number>>;
-};
-
-/** time elapsed */
-const Time = ({ ref, won }: { ref: Ref<TimeRef>; won: boolean }) => {
-  /** game timer */
-  const [time, setTime] = useStorage("time", 0);
-
-  useImperativeHandle(ref, () => ({ setTime }), [setTime]);
-
-  /** timestamp at last tick */
-  const last = useRef(now());
-
-  useEffect(() => {
-    if (won) return;
-    /** tick clock one sec */
-    const tick = () => {
-      const time = now();
-      /** loosely correct drift */
-      const delta = time - last.current;
-      setTime((prev) => prev + delta);
-      last.current = time;
-    };
-    const timer = window.setInterval(tick, 1000);
-    return () => window.clearInterval(timer);
-  }, [won, setTime]);
-
-  return <span className="tabular-nums">{formatTime(time)}</span>;
-};
-
-/** win animation */
-const Win = () => {
-  type Particle = {
-    card: CardType;
-    animation: TargetAndTransition;
-  };
-
-  const [particles, setParticles] = useState<Record<string, Particle>>({});
-
-  useInterval(() => {
-    /** random card */
-    const card = sample(getDeck())!;
-    const id = card.id;
-
-    /** random start/end */
-    const start = { x: random(100), y: random(100) };
-    const angle = random(360);
-    const end = { x: start.x + 10 * cos(angle), y: start.y + 10 * sin(angle) };
-
-    /** keyframes */
-    const animation = {
-      left: [`${start.x}vw`, `${end.x}vw`],
-      top: [`${start.y}vh`, `${end.y}vh`],
-      opacity: [0, 0.5, 0],
-      rotate: [angle, angle + 45 * (Math.random() < 0.5 ? -1 : 1)],
-    };
-
-    /** create */
-    setParticles((prev) => ({ ...prev, [id]: { card, animation } }));
-  }, 100);
-
-  return (
-    <AnimatePresence>
-      {Object.entries(particles).map(([id, { card, animation }]) => (
-        <motion.div
-          key={id}
-          className="pointer-events-none fixed -translate-1/2"
-          initial={{ opacity: 0 }}
-          animate={animation}
-          transition={{ duration: 1 }}
-          onAnimationComplete={() => {
-            /** delete */
-            setParticles((prev) => {
-              const newCards = { ...prev };
-              delete newCards[id];
-              return newCards;
-            });
-          }}
-        >
-          <Card card={card} className="w-14" />
-        </motion.div>
-      ))}
-    </AnimatePresence>
-  );
-};
