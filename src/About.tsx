@@ -27,22 +27,23 @@ export default function About({ sets, hints }: Props) {
         <Detail label="Sets in dealt" value={hints} />
       </div>
 
-      <div className="grid w-full grid-cols-[repeat(auto-fit,--spacing(24))] justify-center gap-8 rounded bg-slate-50 p-4 text-slate-500">
-        {!sets.length && "No sets yet"}
-        {sets.map((set, index) => (
-          <div key={index} className="flex">
-            {set.map((card) => (
-              <Card
-                key={card.id}
-                card={card}
-                stripes={5}
-                thickness={3}
-                className="w-8"
-              />
-            ))}
-          </div>
-        ))}
-      </div>
+      {!!sets.length && (
+        <div className="grid w-full grid-cols-[repeat(auto-fit,--spacing(24))] justify-center gap-8 rounded bg-slate-50 p-4 text-slate-500">
+          {sets.map((set, index) => (
+            <div key={index} className="flex">
+              {set.map((card) => (
+                <Card
+                  key={card.id}
+                  card={card}
+                  stripes={5}
+                  thickness={3}
+                  className="w-8"
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
 
       <hr />
 
@@ -120,7 +121,7 @@ export default function About({ sets, hints }: Props) {
         Examples
       </h2>
 
-      <div className="grid w-full grid-cols-[repeat(auto-fit,--spacing(60))] gap-8">
+      <div className="grid w-full grid-cols-2 gap-8 max-sm:grid-cols-1">
         {examples.map(([set, description], index) => (
           <div key={index} className="flex flex-col gap-2">
             <div className="flex gap-2">
