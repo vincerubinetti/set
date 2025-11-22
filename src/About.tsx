@@ -14,10 +14,10 @@ type Props = {
 /** about popup */
 export default function About({ sets, hints }: Props) {
   return (
-    <div className="flex max-w-150 flex-col gap-6 p-8">
+    <div className="flex max-w-160 flex-col gap-6 p-8">
       <h2>
         <ChartColumn />
-        This game
+        Your game
       </h2>
 
       <div className="flex flex-wrap gap-x-8">
@@ -27,18 +27,18 @@ export default function About({ sets, hints }: Props) {
         <Detail label="Sets in dealt" value={hints} />
       </div>
 
-      <div className="flex min-h-20 gap-10 overflow-x-auto bg-slate-50 p-2">
+      <div className="grid w-full grid-cols-[repeat(auto-fit,--spacing(24))] justify-center gap-8 rounded bg-slate-50 p-4 text-slate-500">
+        {!sets.length && "No sets yet"}
         {sets.map((set, index) => (
-          <div key={index} className="flex gap-1">
+          <div key={index} className="flex">
             {set.map((card) => (
-              <div key={card.id} className="w-4">
-                <Card
-                  card={card}
-                  stripes={5}
-                  thickness={3}
-                  className="h-full rounded!"
-                />
-              </div>
+              <Card
+                key={card.id}
+                card={card}
+                stripes={5}
+                thickness={3}
+                className="w-8"
+              />
             ))}
           </div>
         ))}
@@ -120,24 +120,26 @@ export default function About({ sets, hints }: Props) {
         Examples
       </h2>
 
-      {examples.map(([set, description], index) => (
-        <div key={index} className="flex flex-col gap-2">
-          <div className="flex gap-2">
-            {set.map(([number, fill, color, shape], index) => (
-              <Card
-                key={index}
-                className="w-16"
-                card={{ id: uniqueId(), number, fill, color, shape }}
-              />
-            ))}
+      <div className="grid w-full grid-cols-[repeat(auto-fit,--spacing(60))] gap-8">
+        {examples.map(([set, description], index) => (
+          <div key={index} className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              {set.map(([number, fill, color, shape], index) => (
+                <Card
+                  key={index}
+                  className="w-16"
+                  card={{ id: uniqueId(), number, fill, color, shape }}
+                />
+              ))}
+            </div>
+            <p className="flex flex-col">
+              {description.map((desc, i) => (
+                <span key={i}>{desc}</span>
+              ))}
+            </p>
           </div>
-          <p className="flex flex-col">
-            {description.map((desc, i) => (
-              <span key={i}>{desc}</span>
-            ))}
-          </p>
-        </div>
-      ))}
+        ))}
+      </div>
 
       <hr />
 

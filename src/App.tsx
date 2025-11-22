@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
-import { isEqual, sample } from "lodash";
+import { isEqual, random } from "lodash";
 import {
   Check,
   CircleQuestionMark,
@@ -36,8 +36,8 @@ export default function App() {
   /** undealt cards */
   const [undealt, setUndealt] = useStorage<Cards>("undealt", []);
 
-  /** cards on table */
-  const [table, setTable] = useStorage<Cards>("table", []);
+  /** cards on dealt */
+  const [dealt, setDealt] = useStorage<Cards>("dealt", []);
 
   /** sets found */
   const [sets, setSets] = useStorage<Triple[]>("sets", []);
@@ -45,19 +45,32 @@ export default function App() {
   /** selected cards */
   const [selected, setSelected] = useState<Cards>([]);
 
+  /** track hinted cards to not double-penalize player */
+  const [hinted, setHinted] = useStorage<Cards[]>("hinted", []);
+
   /** is game over */
   const [won, setWon] = useStorage("won", false);
 
   /** clock component */
   const clockRef = useRef<ClockRef>(null);
 
+  /** sets on table */
+  const setsDealt = findSets(dealt);
+
+  /** possible sets left to find */
+  const setsLeft = findSets(dealt.concat(undealt));
+
+  /** roughly linear progress */
+  const progress = 1 - (setsLeft.length / 1080) ** (1 / 2.5);
+
   /** new game */
   const newGame = () => {
     window.localStorage.clear();
     setUndealt(shuffleCards(getDeck()));
-    setTable([]);
+    setDealt([]);
     setSets([]);
-    clockRef.current?.setTime(0);
+    setHinted([]);
+    clockRef.current?.set(0);
     setWon(false);
   };
 
@@ -73,39 +86,51 @@ export default function App() {
   /** deselect all cards */
   const deselect = useCallback(() => setSelected([]), []);
 
-  /** shuffle cards on table */
-  const shuffle = () => setTable(shuffleCards(table));
+  /** shuffle cards on dealt */
+  const shuffle = () => setDealt(shuffleCards(dealt));
 
-  /** sort cards on table */
-  const sort = () => setTable(sortCards(table));
+  /** sort cards on dealt */
+  const sort = () => setDealt(sortCards(dealt));
 
-  /** are table cards already sorted */
-  const isSorted = isEqual(table, sortCards(table));
+  /** are dealt cards already sorted */
+  const isSorted = isEqual(dealt, sortCards(dealt));
 
-  /** move card from undealt to table */
+  /** move card from undealt to dealt */
   const deal = (number: number) => {
     const cards = undealt.slice(-number);
     if (!cards.length) return;
     setUndealt((prev) => prev.slice(0, -number));
-    setTable((prev) => [...prev, ...cards]);
+    setDealt((prev) => [...prev, ...cards]);
   };
 
   /** manually deal more cards */
   const more = () => {
     deal(3);
-    penalize(10);
+    penalize(30);
   };
 
-  /** get hint in cards on table */
+  /** get hint in cards on dealt */
   const hint = () => {
-    const hints = findSets(table);
-    if (!hints.length) return;
-    let pair = selected;
-    while (hints.length > 1 && isEqual(pair, selected))
-      pair = sample(hints)!.slice(0, -1);
-    if (isEqual(pair, selected)) return;
-    setSelected(pair);
-    penalize(60);
+    if (!setsDealt.length) return;
+    const hints = setsDealt
+      /** consistent order for tracking */
+      .map(sortCards)
+      /** use only first two cards for hint */
+      .map((set) => set.slice(0, -1));
+    /** find index of already-selected hint */
+    let index = hints.findIndex((hint) => isEqual(hint, selected));
+    /** if none already selected, choose random */
+    if (index === -1) index = random(hints.length - 1);
+    else
+      /** move to next hint */
+      index = (index + 1) % hints.length;
+    const hint = hints[index];
+    if (!hint) return;
+    /** track hint */
+    setHinted((prev) => [...prev, hint]);
+    setSelected(hint);
+    /** don't penalize if hint already shown */
+    if (!hinted.some((already) => isEqual(already, hint))) penalize(60);
   };
 
   /** penalize player by adding more time */
@@ -116,13 +141,13 @@ export default function App() {
         {seconds}s
       </>,
     );
-    clockRef.current?.setTime((prev) => prev + 1000 * seconds);
+    clockRef.current?.set((prev) => prev + 1000 * seconds);
   };
 
-  /** move set from table to sets */
+  /** move set from dealt to sets */
   const makeSet = useCallback(
     async (cards: Triple) => {
-      setTable((prev) => prev.filter((card) => !cards.includes(card)));
+      setDealt((prev) => prev.filter((card) => !cards.includes(card)));
       setSets((prev) => [...prev, cards]);
       deselect();
       await sleep();
@@ -131,7 +156,7 @@ export default function App() {
         behavior: "smooth",
       });
     },
-    [deselect, setTable, setSets],
+    [deselect, setDealt, setSets],
   );
 
   /** submit cards as set */
@@ -159,24 +184,18 @@ export default function App() {
     })();
   }, [selected, deselect, makeSet]);
 
-  /** possible sets left to find */
-  const setsLeft = findSets(table.concat(undealt));
-
-  /** roughly linear progress */
-  const progress = 1 - (setsLeft.length / 1080) ** (1 / 2.5);
-
   /** new game if none saved */
-  if (!undealt.length && !table.length && !sets.length && !won) newGame();
+  if (!undealt.length && !dealt.length && !sets.length && !won) newGame();
 
   /** auto-deal new cards */
-  if ((table.length < 12 || !findSets(table).length) && undealt.length) deal(3);
+  if ((dealt.length < 12 || !setsDealt.length) && undealt.length) deal(3);
 
   /** check if game over */
   if (!won && !setsLeft.length && sets.length) setWon(true);
 
   // @ts-expect-error ignore
   // eslint-disable-next-line
-  window.cheat = () => setSelected(findSets(table)[0] ?? []);
+  window.cheat = () => setSelected(setsDealt[0] ?? []);
 
   return (
     <>
@@ -200,7 +219,7 @@ export default function App() {
                 <CircleQuestionMark />
               </Button>
             }
-            content={<About sets={sets} hints={findSets(table).length} />}
+            content={<About sets={sets} hints={setsDealt.length} />}
           />
 
           <Button onClick={hint} aria-label="Hint">
@@ -217,7 +236,7 @@ export default function App() {
       </header>
 
       <main
-        className="relative flex grow items-start justify-center overflow-y-auto p-4"
+        className="relative flex grow flex-col items-center justify-center-safe gap-8 overflow-y-auto p-8"
         onClick={(event) => {
           if (
             event.nativeEvent
@@ -229,7 +248,7 @@ export default function App() {
         }}
       >
         {!!won && (
-          <div className="absolute gap-2 uppercase">
+          <div className="gap-2 uppercase">
             {"You win!".split("").map((letter, index) => (
               <span
                 key={index}
@@ -242,9 +261,9 @@ export default function App() {
           </div>
         )}
 
-        <div className="grid min-h-full w-full max-w-200 grid-cols-[repeat(auto-fit,--spacing(24))] place-content-center gap-4">
+        <div className="grid w-full max-w-200 grid-cols-[repeat(auto-fit,--spacing(24))] place-content-center gap-4">
           <AnimatePresence mode="popLayout">
-            {table.map((card) => (
+            {dealt.map((card) => (
               <motion.button
                 key={card.id}
                 {...motionProps()}
@@ -263,21 +282,22 @@ export default function App() {
                 />
               </motion.button>
             ))}
-            {table.length < 21 && !won && (
-              <motion.button
-                {...motionProps()}
-                className="grid aspect-square w-full place-items-center place-self-center rounded-full text-slate-500 transition-[scale] hover:scale-200"
-                onPointerDown={more}
-                onKeyDown={({ key }) => {
-                  if (["Enter", " "].includes(key)) more();
-                }}
-                aria-label="Draw more cards"
-              >
-                <Plus />
-              </motion.button>
-            )}
           </AnimatePresence>
         </div>
+
+        {dealt.length < 21 && !won && (
+          <motion.button
+            {...motionProps()}
+            className="relative grid size-16 place-items-center place-self-center rounded-full bg-slate-50 text-slate-500 transition-colors hover:bg-slate-200"
+            onPointerDown={more}
+            onKeyDown={({ key }) => {
+              if (["Enter", " "].includes(key)) more();
+            }}
+            aria-label="Draw more cards"
+          >
+            <Plus />
+          </motion.button>
+        )}
 
         <Toasts />
 

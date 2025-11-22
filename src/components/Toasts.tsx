@@ -6,35 +6,39 @@ import { motionProps } from "@/App";
 import { sleep } from "@/util/misc";
 
 /** global toasts */
-const toastsAtom = atom<{ id: string; content: ReactNode }[]>([]);
+const toastAtom = atom<{ id: string; content: ReactNode }>();
 
-/** make toasts anywhere */
+/** create toast */
 export const toast = async (content: ReactNode) => {
   const id = uniqueId();
   /** create */
-  getDefaultStore().set(toastsAtom, (prev) => [{ id, content }, ...prev]);
+  getDefaultStore().set(toastAtom, { id, content });
   await sleep(2000);
   /** delete */
-  getDefaultStore().set(toastsAtom, (prev) =>
-    prev.filter((toast) => toast.id !== id),
-  );
+  remove(id);
 };
 
+/** delete toast */
+const remove = (id: string) =>
+  getDefaultStore().set(toastAtom, (prev) =>
+    prev?.id === id ? undefined : prev,
+  );
+
 export default function Toasts() {
-  const toasts = useAtomValue(toastsAtom);
+  const toast = useAtomValue(toastAtom);
 
   return (
-    <div className="pointer-events-none absolute inset-0 flex flex-col items-end gap-2 p-2">
+    <div className="pointer-events-none absolute inset-0 flex flex-col items-center gap-2 p-2">
       <AnimatePresence mode="popLayout">
-        {toasts.map(({ id, content }) => (
+        {toast && (
           <motion.div
-            key={id}
+            key={toast.id}
             {...motionProps()}
-            className="flex items-center justify-end gap-2 rounded bg-white p-2"
+            className="flex items-center gap-2 p-2"
           >
-            {content}
+            {toast.content}
           </motion.div>
-        ))}
+        )}
       </AnimatePresence>
     </div>
   );

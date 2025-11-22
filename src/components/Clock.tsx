@@ -5,13 +5,14 @@ import type {
   Ref,
   SetStateAction,
 } from "react";
+import { useWindowsFocus } from "@reactuses/core";
 import clsx from "clsx";
 import { now } from "lodash";
 import { useStorage } from "@/util/hooks";
 import { formatTime } from "@/util/string";
 
 export type ClockRef = {
-  setTime: Dispatch<SetStateAction<number>>;
+  set: Dispatch<SetStateAction<number>>;
 };
 
 type Props = {
@@ -21,23 +22,25 @@ type Props = {
 
 export default function Clock({ ref, won, className, ...props }: Props) {
   /** current time */
-  const [time, _setTime] = useStorage("time", 0);
+  const [time, setTime] = useStorage("time", 0);
 
   /** timestamp at last time set */
   const mark = useRef(now());
 
+  /** is window active */
+  const active = useWindowsFocus();
+
   /** set time wrapper */
-  const setTime = useCallback(
-    (value: number | ((prev: number) => number)) => {
-      const newTime = typeof value === "function" ? value(time) : value;
-      _setTime(newTime);
+  const set = useCallback(
+    (value: SetStateAction<number>) => {
+      setTime(value);
       mark.current = now();
     },
-    [time, _setTime],
+    [setTime],
   );
 
   /** expose set time */
-  useImperativeHandle(ref, () => ({ setTime }), [setTime]);
+  useImperativeHandle(ref, () => ({ set }), [set]);
 
   useEffect(() => {
     if (won) return;
@@ -46,12 +49,13 @@ export default function Clock({ ref, won, className, ...props }: Props) {
       const time = now();
       /** loosely correct for drift */
       const delta = time - mark.current;
-      setTime((prev) => prev + delta);
+      if (active) setTime((prev) => prev + delta);
+      mark.current = now();
     };
 
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
-  }, [won, setTime]);
+  }, [active, won, setTime]);
 
   return (
     <span className={clsx("tabular-nums", className)} {...props}>

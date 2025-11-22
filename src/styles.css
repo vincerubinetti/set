@@ -64,7 +64,7 @@ b {
 }
 
 button {
-  @apply cursor-pointer;
+  @apply shrink-0 cursor-pointer;
 }
 
 button > svg {
