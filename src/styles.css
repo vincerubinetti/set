@@ -25,14 +25,14 @@ html {
   @apply font-thin;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 600px), (max-height: 600px) {
   html {
     --spacing: 3.25px;
     font-size: 95%;
   }
 }
 
-@media (max-width: 400px) {
+@media (max-width: 400px), (max-height: 400px) {
   html {
     --spacing: 2.5px;
     font-size: 90%;
